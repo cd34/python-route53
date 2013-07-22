@@ -1,3 +1,5 @@
+import hashlib
+
 from route53.change_set import ChangeSet
 from route53.exceptions import Route53Error
 
@@ -60,6 +62,9 @@ class ResourceRecordSet(object):
             weight=weight,
             set_identifier=set_identifier,
         )
+        self.uniq = hashlib.sha256(str(self._initial_vals)). \
+            hexdigest()
+        print self.uniq
 
     def __str__(self):
         return '<%s: %s>' % (self.__class__.__name__, self.name)
