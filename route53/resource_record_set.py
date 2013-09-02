@@ -1,5 +1,17 @@
+import re
+
 from route53.change_set import ChangeSet
 from route53.exceptions import Route53Error
+
+def octalReplace(x):
+    c = int(x.group(1), 8)
+    if c > 0x20 and c < 0x2e or c > 0x2e and c < 0x7f:
+        return chr(c)
+    else:
+        return x.group(0)
+
+def prettyDnsName(value):
+    return re.sub(r'\\(\d{3})', octalReplace, value)
 
 class ResourceRecordSet(object):
     """
@@ -41,7 +53,7 @@ class ResourceRecordSet(object):
 
         self.connection = connection
         self.zone_id = zone_id
-        self.name = name
+        self.name = prettyDnsName(name)
         self.ttl = int(ttl) if ttl else None
         self.records = records
         self.region = region

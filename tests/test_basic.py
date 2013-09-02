@@ -1,3 +1,5 @@
+# coding: utf-8
+
 import unittest
 import route53
 from route53.exceptions import AlreadyDeletedError
@@ -141,3 +143,49 @@ class ResourceRecordSetTestCase(BaseTestCase):
         # Initial values should equal current values after the save.
         for key, val in new_record._initial_vals.items():
             self.assertEqual(getattr(new_record, key), val)
+
+    def test_wildcard_rrset(self):
+        """
+        Tests hostname with wildcard *
+        Amazon returns several characters as octal representations
+
+        boto faces the same issue: https://github.com/boto/boto/pull/1216
+
+        with a suggested fix from a gist:
+        https://gist.github.com/meonkeys/4482362#file-route53octals-py-L13
+        """
+
+        new_zone, change_info = self.conn.create_hosted_zone(
+            'route53-unittest-zone.com.'
+        )
+        new_record, change_info = new_zone.create_a_record(
+            name='*.route53-unittest-zone.com.',
+            values=['8.8.8.8'],
+        )
+        new_record.save()
+        zone = self.conn.get_hosted_zone_by_id(new_zone.id)
+
+        matched = False
+        name_to_match = '*.route53-unittest-zone.com.'
+        for record_set in zone.record_sets:
+            if record_set.name == name_to_match:
+                matched = True
+
+        self.assertEqual(matched, True)
+
+    def test_pretty_cleanup(self):
+        from route53.resource_record_set import prettyDnsName
+
+        # fübar
+        # Shouldn't decode small letter with diaeresis
+        self.assertEqual(r'f\374bar', prettyDnsName(r'f\374bar'))
+ 
+        # f.bar
+        # Shouldn't decode period
+        self.assertEqual(r'f\056bar', prettyDnsName(r'f\056bar'))
+ 
+        # Should decode asterisk
+        self.assertEqual('*.foo', prettyDnsName(r'\052.foo'))
+ 
+        # Should decode small letter u
+        self.assertEqual('fubar', prettyDnsName(r'f\165bar')) 
