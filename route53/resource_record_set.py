@@ -1,9 +1,6 @@
-<<<<<<< HEAD
 import copy
 import hashlib
-=======
 import re
->>>>>>> 1afcf0731bcc67b8f57822dea408548e225ebf28
 
 from route53.change_set import ChangeSet
 from route53.exceptions import Route53Error
