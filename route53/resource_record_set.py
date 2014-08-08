@@ -1,3 +1,4 @@
+import copy
 import hashlib
 
 from route53.change_set import ChangeSet
@@ -62,9 +63,9 @@ class ResourceRecordSet(object):
             weight=weight,
             set_identifier=set_identifier,
         )
-        self.uniq = hashlib.sha256(str(self._initial_vals)). \
-            hexdigest()
-        print self.uniq
+        hash = copy.copy(self._initial_vals)
+        del hash['connection']
+        self.uniq = hashlib.sha256(str(hash)).hexdigest()
 
     def __str__(self):
         return '<%s: %s>' % (self.__class__.__name__, self.name)
